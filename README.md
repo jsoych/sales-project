@@ -1,0 +1,1 @@
+sales-project is a collection of mini projects centered on machine learning pipelines, models, and dashboards. This project is ongoing and includes parts that are completed, semi-completed, and just ideas.
