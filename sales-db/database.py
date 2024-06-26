@@ -5,7 +5,7 @@ import psycopg2
 class SalesDB():
     """
     SalesDB is an object that manages connections, makes tables, inserts
-    values, and queries to our database. It also is includes specific methods
+    values, and queries to our database. It also includes specific methods
     needed to fetch past data for machine learning applications.
     """
 
