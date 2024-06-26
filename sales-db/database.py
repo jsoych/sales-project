@@ -37,12 +37,14 @@ class SalesDB():
         - sql (str): The sql query.
         - values (list|optional): A list of values.
         """
-        with self.connect() as conn:
+        conn = self.connect()
+        with conn:
             with conn.cursor() as curs:
                 if values:
                     curs.execute(sql,values)
                 else:
                     curs.execute(sql)
+        conn.close()
 
     def createTable(self, name, col_names, col_types, *alter_table) -> None:
         """
@@ -136,15 +138,24 @@ class SalesDB():
         conn.commit()
         conn.close()
 
-    def query(self, sql):
-        with self.connect() as conn:
-            with conn.cursor() as cur:
-                try:
-                    cur.execute(sql)
-                    return cur.fetchall()
-                except psycopg2.errors.SyntaxError:
-                    print("SyntaxError: invalid SQL query \"{}\"".format(sql))
-                    return
+    def fetch(self, sql):
+        """
+        Fetches the query from our database, and returns the results.
+
+        Arguments:
+        - sql (str): The query.
+
+        Returns:
+        - list[tuples]: A list of the query results.
+        """
+        conn = self.connect()
+        results = None
+        with conn:
+            with conn.cursor() as curs:
+                curs.execute(sql)
+                results = curs.fetchall()
+        conn.close()
+        return results
 
     def selectAll(self, name):
         """
@@ -157,7 +168,7 @@ class SalesDB():
         - list: A list of rows from the table.
         """
         try:
-            return self.query("SELECT * FROM {}".format(name))
+            return self.fetch("SELECT * FROM {}".format(name))
         except psycopg2.errors.UndefinedTable:
             print("UndefinedTable: relation \
                   \"{}\" does not exist".format(name))
@@ -172,7 +183,7 @@ class SalesDB():
             FROM sales \
             GROUP BY shop_id, item_id \
             ORDER BY shop_id, item_id"
-        return self.query(sql)
+        return self.fetch(sql)
 
     def getSalesData(self, shop_id, item_id):
         """
@@ -193,7 +204,7 @@ class SalesDB():
             WHERE shop_id = {0} \
                 AND item_id = {1} \
             GROUP BY date_block_num".format(shop_id, item_id)
-        return self.query(sql)
+        return self.fetch(sql)
 
     def getItemPrice(self, shop_id, item_id):
         """
@@ -212,7 +223,7 @@ class SalesDB():
             FROM sales \
             WHERE shop_id = {0} \
                 AND item_id = {1}".format(shop_id, item_id)
-        return self.query(sql)
+        return self.fetch(sql)
 
     def getItemCategory(self, shop_id, item_id):
         """
@@ -233,4 +244,4 @@ class SalesDB():
                 ON sales.item_id = items.item_id \
             WHERE sales.shop_id = {0} \
                 AND sales.item_id = {1}".format(shop_id, item_id)
-        return self.query(sql)
+        return self.fetch(sql)
