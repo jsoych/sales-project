@@ -140,7 +140,7 @@ class SalesDB():
 
     def fetch(self, sql):
         """
-        Fetches the query from our database, and returns the results.
+        Fetches and returns the query results from our database.
 
         Arguments:
         - sql (str): The query.
