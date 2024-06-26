@@ -1,0 +1,5 @@
+data/
+
+sales-db/__pycache__/
+
+sales-model/sales-forecasting.zip
