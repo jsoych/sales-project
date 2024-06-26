@@ -1,7 +1,5 @@
-compose.yaml
-competitive-data-science-predict-future-sales.zip
 data/
 
 sales-db/__pycache__/
 
-  sales-model/sales-forecasting.zip
+sales-model/sales-forecasting.zip
