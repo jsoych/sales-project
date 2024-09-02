@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  sales-db:
+    container_name: sales-db
+    image: postgres:15.5-bullseye
+    env_file: ./.env    
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+    volumes:
+      - sales-db:/var/lib/postgresql/data
+    hostname: localhost
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  pgadmin:
+    container_name: sales-db-pgadmin
+    image: dpage/pgadmin4:8.3
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "${PGADMIN_DEFAULT_EMAIL}"
+      PGADMIN_DEFAULT_PASSWORD: "${PGADMIN_DEFAULT_PASSWORD}"
+    ports:
+      - "5050:80"
+    depends_on:
+      - sales-db
+    restart: unless-stopped
+
+volumes:
+  sales-db:
