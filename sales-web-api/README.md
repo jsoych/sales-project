@@ -1,0 +1,2 @@
+# Sale Web Api
+sales-web-api is an ongoing project. The aim of this project is to bring sales-database and sales-model together in a way the extends the inference capabilities of the machine learning model.

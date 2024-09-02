@@ -1,0 +1,2 @@
+# Sales Model
+The objective of the sales model is to forecast the next month sales for each shop and item pairs. The model takes past sales data and an identifier to predict the next month in sales. The data was collected from the Predict Future Sales competition on kaggle kindly provided by one of the largest Russian software firms - 1C Company.

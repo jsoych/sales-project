@@ -2,10 +2,11 @@ import os
 from dotenv import load_dotenv
 from database import SalesDB
 
+
 load_dotenv()
 data_dir = os.getenv("DATA_DIR")
 
-# the following inserts the needed csv files into our database
+# Insert the needed csv files into our database
 db = SalesDB(user="admin", password="root")
 db.insertCSV(
     "itemcategories", 

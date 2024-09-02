@@ -26,7 +26,7 @@ class SalesDB():
         Returns a connection object to our database.
 
         Returns:
-            psycopg2.connection object
+            A psycopg2.connection object.
         """
         return psycopg2.connect(
             database=self.database,

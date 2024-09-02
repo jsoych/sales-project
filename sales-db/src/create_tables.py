@@ -1,9 +1,10 @@
 from database import SalesDB
 
 
-# the following creates a SalesDB instance for creating tables
+# Create SalesDB instance
 db = SalesDB(user="admin", password="root")
 
+# Create itemscategories table
 db.createTable(
     "itemcategories", 
     ["item_category_name", "item_category_id"], 
@@ -11,6 +12,7 @@ db.createTable(
     "ADD PRIMARY KEY (item_category_id)"
 )
 
+# Create shops table
 db.createTable(
     "shops",
     ["shop_name", "shop_id"],
@@ -18,6 +20,7 @@ db.createTable(
     "ADD PRIMARY KEY (shop_id)"
 )
 
+# Create items table
 db.createTable(
     "items",
     ["item_name", "item_id", "item_category_id"],
@@ -27,6 +30,7 @@ db.createTable(
         REFERENCES itemcategories(item_category_id)"
 )
 
+# Create sales
 db.createTable(
     "sales",
     [
