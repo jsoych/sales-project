@@ -245,3 +245,4 @@ class SalesDB():
             WHERE sales.shop_id = {0} \
                 AND sales.item_id = {1}".format(shop_id, item_id)
         return self.fetch(sql)
+
