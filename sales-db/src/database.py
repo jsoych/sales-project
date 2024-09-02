@@ -240,7 +240,7 @@ class SalesDB():
             item_id (int): The item id.
 
         Returns:
-        - int: A category id.
+            A category id.
         """
         sql = \
             "SELECT DISTINCT \
