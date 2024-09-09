@@ -8,7 +8,13 @@ class SalesDB():
     values, and queries to our database. It also includes specific methods
     needed to fetch past data for machine learning applications.
     """
-    def __init__(self, user, password) -> None:
+    def __init__(
+            self,
+            user,
+            password,
+            database="sales_db",
+            host="localhost"
+        ) -> None:
         """
         Arguments:
             database: The name of the database.
@@ -16,10 +22,10 @@ class SalesDB():
             password: The user's password needed to connect with the database.
             host: The name of the database network.
         """
-        self.database = "sales_db"
+        self.database = database
         self.user = user
         self.password = password
-        self.host = "localhost"
+        self.host = host
 
     def connect(self):
         """
@@ -163,23 +169,6 @@ class SalesDB():
         conn.close()
         return results
 
-    def selectAll(self, name):
-        """
-        Selects all columns, and rows from the table.
-
-        Arguments:
-            name (str): The table name.
-
-        Returns:
-            list: A list of rows from the table.
-        """
-        try:
-            return self.fetch("SELECT * FROM {}".format(name))
-        except psycopg2.errors.UndefinedTable:
-            print("UndefinedTable: relation \
-                  \"{}\" does not exist".format(name))
-            return
-
     def getIds(self):
         """Gets shop and item id pairs from the sales table."""
         sql = \
@@ -250,4 +239,12 @@ class SalesDB():
                 ON sales.item_id = items.item_id \
             WHERE sales.shop_id = {0} \
                 AND sales.item_id = {1}".format(shop_id, item_id)
+        return self.fetch(sql)
+
+    def getPrices(self):
+        """ Gets all item prices from sales table. """
+        sql = \
+            "SELECT DISTINCT \
+                item_price \
+            FROM sales"
         return self.fetch(sql)
