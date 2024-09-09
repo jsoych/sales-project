@@ -7,8 +7,9 @@ from database import SalesDB
 class DataGenerator(tf.keras.utils.PyDataset):
 
     """
-    DataGenerator generates and preprocesses batches of data from a database.
-    The connections, and queries are made using the SalesDB interface. 
+    DataGenerator generates and preprocesses batches of data from a SalesDB
+    instance. The SalesDB instance manages connections to the database and
+    retrieves the needed data for the data generator.
     """
     
     def __init__(
