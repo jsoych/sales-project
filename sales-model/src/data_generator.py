@@ -12,8 +12,10 @@ class DataGenerator(tf.keras.utils.PyDataset):
     
     def __init__(
             self,
-            sales_data,
-            items_data,
+            sales_path=None,
+            items_path=None,
+            data='auto',
+            ids=None,
             batch_size=32,
             seq_len=33,
             shuffle=True,
@@ -22,8 +24,14 @@ class DataGenerator(tf.keras.utils.PyDataset):
         ):
         """
         Args:
-            sales_data: The path to the sales csv file.
-            items_data: The path to the items csv file.
+            sales_path: The path to the sales csv file.
+            items_path: The path to the items csv file.
+            data: If set to auto, the data is loaded and preprocessed from
+                the sales and items csv files. Otherwise, data is set with
+                a preprocessed pandas groupby object.
+            ids: If data is set to auto, the ids are the unique shop and item
+                id pairs from the sales csv. Otherwise, ids is set with a
+                list of shop and item id pairs.
             batch_size: The size of each batch of data. If the number of
                 ids is not a multiple of the batch size, the last batch is 
                 smaller.
@@ -33,39 +41,51 @@ class DataGenerator(tf.keras.utils.PyDataset):
         """
         super().__init__(**krwags)
 
-        sales_df = pd.read_csv(sales_data)
-        items_df = pd.read_csv(
-            items_data,
-            usecols=['item_id', 'item_category_id'],
-            index_col=['item_id']
-        )
+        if (data == 'auto'):
+            # Load sales data
+            sales_df = pd.read_csv(sales_path)
 
-        # Join sales_df with item_df on item_id
-        sales_df = sales_df.join(items_df, on='item_id')
+            # Load item categories
+            items_df = pd.read_csv(
+                items_path,
+                usecols=['item_id', 'item_category_id'],
+                index_col=['item_id']
+            )
 
-        # Convert date column to datetime type
-        sales_df['date'] = pd.to_datetime(sales_df['date'], format='%d.%m.%Y')
+            # Group item prices
+            prices_df = sales_df[['shop_id', 'item_id', 'item_price']]
+            prices_df = prices_df.groupby(
+                by=['shop_id', 'item_id']
+            ).agg('mean')
 
-        # Aggregate date by shop_id, item_id, and date
-        agg_funcs = {
-            'date_block_num':'max',
-            'item_category_id':'min',
-            'item_price':'mean',
-            'item_cnt_day':'sum'
-        }
-        sales_df = sales_df.groupby(by=['shop_id', 'item_id', 'date']).agg(agg_funcs)
+            # Group item count
+            sales_df.drop(columns=['date', 'item_price'], inplace=True)
+            sales_df = sales_df.groupby(
+                by=['shop_id', 'item_id', 'date_block_num']
+            ).agg('sum')
 
-        # Store sales_df as data
-        self.data = sales_df
+            # Store data
+            self.data = {
+                'sales': sales_df,
+                'items': items_df,
+                'prices': prices_df
+            }
+        else:
+            # Store data
+            self.data = data      
 
-        # Store unique shop and item id pairs as ids
-        self.ids = list(sales_df.index.droplevel('date').unique())
-
+        if not(ids):
+            # Store unique shop and item id pairs
+            ids = self.data['sales'].index.droplevel('date_block_num')
+            self.ids = list(ids.unique())
+        else:
+            self.ids = ids
+        
         self.shuffle = shuffle
+        self.seed = seed
 
         # Shuffle data
         if (shuffle):
-            self.seed = seed
             random.seed(seed)
             random.shuffle(self.ids)
         
@@ -82,29 +102,27 @@ class DataGenerator(tf.keras.utils.PyDataset):
         high = min((idx + 1)* self.batch_size, len(self.ids))
         num_samples = high - low
         x_batch = {
+            'sales': np.zeros((num_samples, self.seq_len, 12), dtype='float32'),
             'categories': np.empty(num_samples, dtype='int32'),
-            'prices': np.empty(num_samples, dtype='float32'),
-            'sequences': np.zeros((num_samples, self.seq_len, 12), dtype='float32')
+            'prices': np.empty(num_samples, dtype='float32')
         }
         y_batch = np.empty(num_samples)
 
-        for i, id in enumerate(self.ids[low:high]):
-            # Get all data
-            data = self.data.loc[id,:]
-
+        for i, (shop_id, item_id) in enumerate(self.ids[low:high]):
             # Add category id to batch
-            x_batch['categories'][i] = data.pop('item_category_id').min()
+            x_batch['categories'][i] = self.data['items'].loc[item_id]
 
             # Add max price to batch
-            x_batch['prices'][i] = data.pop('item_price').max()
+            x_batch['prices'][i] = self.data['prices'].loc[(shop_id, item_id)]
 
             # Create sales sequence
+            sales = self.data['sales'].loc[shop_id, item_id,:]
             seq = np.zeros((self.seq_len+1,12))
-            for date, date_block_num, item_cnt in data.itertuples():
-                seq[date_block_num, date.month-1] += item_cnt
+            for date_block_num, item_cnt in sales.itertuples():
+                seq[date_block_num, date_block_num%12] += item_cnt
             
             # Add sequence to x and y batch
-            x_batch['sequences'][i] = seq[:-1]
+            x_batch['sales'][i] = seq[:-1]
             y_batch[i] = np.sum(seq[-1])
 
         return x_batch, y_batch
@@ -116,22 +134,22 @@ class DataGenerator(tf.keras.utils.PyDataset):
         shuffle is set to False, train_test_split removes and adds the last 
         data points from the data generator.
         """
-        ids = []
+        sample_ids = []
         num_samples = int(frac * len(self.ids))
         # Sample ids
         if (shuffle):
             # Remove and add the ids randomly from the data generator
             random.seed(seed)
-            for i in reversed(range(len(self.ids) - num_samples, len(self.ids))):
-                ids.append(self.ids.pop(random.randrange(i)))
+            for i in reversed(range(len(self.ids)-num_samples,len(self.ids))):
+                sample_ids.append(self.ids.pop(random.randrange(i)))
         else:
             # Remove and add the last ids from the data generator
             for i in range(num_samples):
-                ids.append(self.ids.pop())
-        
+                sample_ids.append(self.ids.pop())
+
         return DataGenerator(
-            ids=ids,
-            sales_db=self.sales_db,
+            data=self.data,
+            ids=sample_ids,
             batch_size=self.batch_size,
             seq_len=self.seq_len,
             shuffle=self.shuffle,
@@ -140,9 +158,12 @@ class DataGenerator(tf.keras.utils.PyDataset):
     
     def get_prices(self):
         """ Gets all of the item prices from the database. """
-        prices = np.array(self.sales_db.getPrices(), dtype='float32')
+        prices = np.array(self.prices.loc['item_price'])
         return np.squeeze(prices)
     
-    def head(self):
-        """  """
-        return self.data.head()
+    def head(self, n=5):
+        """ Return the first n rows. """
+        head = {}
+        for key, value in self.data.items():
+            head[key] = value.head(n)
+        return head
