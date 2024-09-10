@@ -7,7 +7,8 @@ import tensorflow as tf
 class DataGenerator(tf.keras.utils.PyDataset):
 
     """
-    DataGenerator generates and preprocesses batches of data.
+    DataGenerator generates and preprocesses batches of data from sales and
+    item csv files.
     """
     
     def __init__(
@@ -28,7 +29,7 @@ class DataGenerator(tf.keras.utils.PyDataset):
             items_path: The path to the items csv file.
             data: If set to auto, the data is loaded and preprocessed from
                 the sales and items csv files. Otherwise, data is set with
-                a preprocessed pandas groupby object.
+                a dictionary of preprocessed dataframes.
             ids: If data is set to auto, the ids are the unique shop and item
                 id pairs from the sales csv. Otherwise, ids is set with a
                 list of shop and item id pairs.
@@ -67,7 +68,7 @@ class DataGenerator(tf.keras.utils.PyDataset):
             # Store data
             self.data = {
                 'sales': sales_df,
-                'items': items_df,
+                'categories': items_df,
                 'prices': prices_df
             }
         else:
@@ -110,7 +111,7 @@ class DataGenerator(tf.keras.utils.PyDataset):
 
         for i, (shop_id, item_id) in enumerate(self.ids[low:high]):
             # Add category id to batch
-            x_batch['categories'][i] = self.data['items'].loc[item_id]
+            x_batch['categories'][i] = self.data['categories'].loc[item_id]
 
             # Add max price to batch
             x_batch['prices'][i] = self.data['prices'].loc[(shop_id, item_id)]
