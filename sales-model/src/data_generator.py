@@ -124,7 +124,7 @@ class DataGenerator(tf.keras.utils.PyDataset):
             items_batch[i] = self.data['items'].loc[item_id]
 
             # Add price to price_batch
-            prices_batch['prices'][i] = self.data['prices'].loc[(shop_id, item_id)]
+            prices_batch[i] = self.data['prices'].loc[(shop_id, item_id)]
 
         return ([sales_batch, items_batch, prices_batch], y_batch)
     
