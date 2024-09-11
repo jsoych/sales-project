@@ -102,31 +102,31 @@ class DataGenerator(tf.keras.utils.PyDataset):
         low = idx * self.batch_size
         high = min((idx + 1)* self.batch_size, len(self.ids))
         num_samples = high - low
-        x_batch = {
-            'sales': np.zeros((num_samples, self.seq_len, 12), dtype='float32'),
-            'items': np.empty(num_samples, dtype='int32'),
-            'prices': np.empty(num_samples, dtype='float32')
-        }
+
+        # Create batches
+        sales_batch = np.zeros((num_samples, self.seq_len, 12), dtype='float32')
+        items_batch = np.empty(num_samples, dtype='int32')
+        prices_batch = np.empty(num_samples, dtype='float32')
         y_batch = np.empty(num_samples)
 
         for i, (shop_id, item_id) in enumerate(self.ids[low:high]):
-            # Add category id to batch
-            x_batch['items'][i] = self.data['items'].loc[item_id]
-
-            # Add max price to batch
-            x_batch['prices'][i] = self.data['prices'].loc[(shop_id, item_id)]
-
             # Create sales sequence
             sales = self.data['sales'].loc[shop_id, item_id,:]
             seq = np.zeros((self.seq_len+1,12))
             for date_block_num, item_cnt in sales.itertuples():
                 seq[date_block_num, date_block_num%12] += item_cnt
             
-            # Add sequence to x and y batch
-            x_batch['sales'][i] = seq[:-1]
+            # Add add sequence to sales_batch and y_batch
+            sales_batch[i] = seq[:-1]
             y_batch[i] = np.sum(seq[-1])
 
-        return x_batch, y_batch
+            # Add category id to items_batch
+            items_batch[i] = self.data['items'].loc[item_id]
+
+            # Add price to price_batch
+            prices_batch['prices'][i] = self.data['prices'].loc[(shop_id, item_id)]
+
+        return ([sales_batch, items_batch, prices_batch], y_batch)
     
     def train_test_split(self, frac=0.2, shuffle=True, seed=0):
         """
