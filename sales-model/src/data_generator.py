@@ -46,7 +46,7 @@ class DataGenerator(tf.keras.utils.PyDataset):
             # Load sales data
             sales_df = pd.read_csv(sales_path)
 
-            # Load item categories
+            # Load item items
             items_df = pd.read_csv(
                 items_path,
                 usecols=['item_id', 'item_category_id'],
@@ -68,7 +68,7 @@ class DataGenerator(tf.keras.utils.PyDataset):
             # Store data
             self.data = {
                 'sales': sales_df,
-                'categories': items_df,
+                'items': items_df,
                 'prices': prices_df
             }
         else:
@@ -104,14 +104,14 @@ class DataGenerator(tf.keras.utils.PyDataset):
         num_samples = high - low
         x_batch = {
             'sales': np.zeros((num_samples, self.seq_len, 12), dtype='float32'),
-            'categories': np.empty(num_samples, dtype='int32'),
+            'items': np.empty(num_samples, dtype='int32'),
             'prices': np.empty(num_samples, dtype='float32')
         }
         y_batch = np.empty(num_samples)
 
         for i, (shop_id, item_id) in enumerate(self.ids[low:high]):
             # Add category id to batch
-            x_batch['categories'][i] = self.data['categories'].loc[item_id]
+            x_batch['items'][i] = self.data['items'].loc[item_id]
 
             # Add max price to batch
             x_batch['prices'][i] = self.data['prices'].loc[(shop_id, item_id)]
