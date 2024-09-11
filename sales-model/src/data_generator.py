@@ -159,7 +159,7 @@ class DataGenerator(tf.keras.utils.PyDataset):
     
     def get_prices(self):
         """ Gets all of the item prices from the database. """
-        prices = np.array(self.data['prices'].loc['item_price'])
+        prices = np.array(self.data['prices']['item_price'])
         return np.squeeze(prices)
     
     def head(self, n=5):
