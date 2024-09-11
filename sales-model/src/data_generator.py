@@ -137,11 +137,11 @@ class DataGenerator(tf.keras.utils.PyDataset):
         
         return batches
 
-    def train_val_split(self, frac=0.2, shuffle=True, seed=0):
+    def split_generator(self, frac=0.2, shuffle=True, seed=0):
         """
         Removes a fraction of the data from the data generator, and returns a
         new DataGenerator with the removed data and the same attributes. If 
-        shuffle is set to False train_val_split removes and adds the last data
+        shuffle is set to False split_generator removes and adds the last data
         points from the data generator.
         """
         num_batches = len(self)
