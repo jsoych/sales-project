@@ -73,7 +73,7 @@ class DataGenerator(tf.keras.utils.PyDataset):
             # Get and store batches of data
             self.batches = self.batch_data(data)
         else:
-            # Store batches and item prices
+            # Store batches
             self.batches = batches
         
         self.shuffle = shuffle
@@ -101,7 +101,10 @@ class DataGenerator(tf.keras.utils.PyDataset):
         # Create batches
         batches = []
         num_batches = np.ceil(len(ids) / self.batch_size).astype('int32')
+
+        # Create progress bar
         prog_bar =tf.keras.utils.Progbar(num_batches)
+
         for idx in range(num_batches):
             low = idx * self.batch_size
             high = min((idx + 1)* self.batch_size, len(ids))
