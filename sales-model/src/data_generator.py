@@ -126,7 +126,7 @@ class DataGenerator(tf.keras.utils.PyDataset):
             # Add price to price_batch
             prices_batch[i] = self.data['prices'].loc[(shop_id, item_id)]
 
-        return ([sales_batch, items_batch, prices_batch], y_batch)
+        return (sales_batch, items_batch, prices_batch), y_batch
     
     def train_test_split(self, frac=0.2, shuffle=True, seed=0):
         """
